@@ -126,7 +126,10 @@ def validation(model, criterion, evaluation_loader, converter, opt):
 
             if pred == gt:
                 n_correct += 1
-            norm_ED += edit_distance(pred, gt) / len(gt)
+            if len(gt) == 0:
+                norm_ED += 1
+            else:
+                norm_ED += edit_distance(pred, gt) / len(gt)
 
     accuracy = n_correct / float(length_of_data) * 100
 
@@ -200,6 +203,7 @@ if __name__ == '__main__':
     parser.add_argument('--character', type=str, default='0123456789abcdefghijklmnopqrstuvwxyz', help='character label')
     parser.add_argument('--sensitive', action='store_true', help='for sensitive character mode')
     parser.add_argument('--PAD', action='store_true', help='whether to keep ratio then pad for image resize')
+    parser.add_argument('--data_filtering', action='store_true', help='for data_filtering mode')
     """ Model Architecture """
     parser.add_argument('--Transformation', type=str, required=True, help='Transformation stage. None|TPS')
     parser.add_argument('--FeatureExtraction', type=str, required=True, help='FeatureExtraction stage. VGG|RCNN|ResNet')

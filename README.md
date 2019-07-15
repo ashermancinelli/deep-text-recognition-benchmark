@@ -11,8 +11,9 @@ Based on this framework, we recorded the 1st place of [ICDAR2013 focused scene t
 The difference between our paper and ICDAR challenge is summarized [here](https://github.com/clovaai/deep-text-recognition-benchmark/issues/13).
 
 ## Updates
-**Mar 17, 2019**: uploaded resources in Baidu Netdisk also, added [Run demo](https://github.com/clovaai/deep-text-recognition-benchmark#run-demo-with-pretrained-model). (check [@sharavsambuu's](https://github.com/sharavsambuu) [colab demo also](https://colab.research.google.com/drive/1PHnc_QYyf9b1_KJ1r15wYXaOXkdm1Mrk)) <br>
-**Mar 9, 2019**: PyTorch version updated from 1.0.1 to 1.1.0, use torch.nn.CTCLoss instead of torch-baidu-ctc, and various minor updated.
+**Jun 24, 2019**: added gt.txt of failure cases that contains path and label of each image, see [image_release_190624.zip](https://drive.google.com/open?id=1VAP9l5GL5fgptgKDLio_h3nMe7X9W0Mf) <br>
+**May 17, 2019**: uploaded resources in Baidu Netdisk also, added [Run demo](https://github.com/clovaai/deep-text-recognition-benchmark#run-demo-with-pretrained-model). (check [@sharavsambuu's](https://github.com/sharavsambuu) [colab demo also](https://colab.research.google.com/drive/1PHnc_QYyf9b1_KJ1r15wYXaOXkdm1Mrk)) <br>
+**May 9, 2019**: PyTorch version updated from 1.0.1 to 1.1.0, use torch.nn.CTCLoss instead of torch-baidu-ctc, and various minor updated.
 
 ## Getting Started
 ### Dependency
@@ -33,7 +34,7 @@ evaluation datasets : benchmark evaluation datasets, consist of [IIIT](http://cv
 2. Add image files to test into `demo_image/`
 3. Run demo.py (add `--sensitive` option if you use case-sensitive model)
 ```
-CUDA_VISIBLE_DEVICES=6 python3 demo.py \
+CUDA_VISIBLE_DEVICES=0 python3 demo.py \
 --Transformation TPS --FeatureExtraction ResNet --SequenceModeling BiLSTM --Prediction Attn \
 --image_folder demo_image/ \
 --saved_model TPS-ResNet-BiLSTM-Attn.pth
@@ -129,6 +130,10 @@ This implementation has been based on these repository [crnn.pytorch](https://gi
 [8] T. Q. Phan, P. Shivakumara, S. Tian, and C. L. Tan. Recognizing text with perspective distortion in natural scenes. In ICCV, pages 569–576, 2013. <br>
 [9] A. Risnumawan, P. Shivakumara, C. S. Chan, and C. L. Tan. A robust arbitrary text detection system for natural scene images. In ESWA, volume 41, pages 8027–8048, 2014. <br>
 [10] B. Shi, X. Bai, and C. Yao. An end-to-end trainable neural network for image-based sequence recognition and its application to scene text recognition. In TPAMI, volume 39, pages2298–2304. 2017. 
+
+## Links
+- WebDemo (combination of Clova AI detection and recognition) : https://demo.ocr.clova.ai/
+- Repo of detection : https://github.com/clovaai/CRAFT-pytorch
 
 ## Citation
 If you find this work useful for your research, please cite:
