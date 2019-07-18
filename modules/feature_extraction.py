@@ -1,6 +1,22 @@
 import torch.nn as nn
 import torch.nn.functional as F
 
+def res_block(in_chans, out_chans, kernel_size=(3, 3),
+                strides=((1, 1), (1, 1))):
+    return nn.Sequential(
+            nn.Conv2d(
+                in_channels=in_chans,
+                out_channels=out_chans,
+                kernel_size=kernel_size,
+                stride=strides[0]
+            ),
+            nn.Conv2d(
+                in_channels=in_chans,
+                out_channels=out_chans,
+                kernel_size=kernel_size,
+                stride=strides[1]
+            )
+        )
 
 class VGG_FeatureExtractor(nn.Module):
     """ FeatureExtractor of CRNN (https://arxiv.org/pdf/1507.05717.pdf) """
@@ -243,4 +259,49 @@ class ResNet(nn.Module):
         x = self.bn4_2(x)
         x = self.relu(x)
 
+        return x
+
+class Rosetta_FeatureExtractor(nn.Module):
+
+    def __init__(self, input_chans, output_chans):
+        hidden_size = 512
+        super().__init__()
+        self.resnet = ResNet(input_chans, output_chans, BasicBlock, [1, 2, 5, 3])
+        self.res_block_1 = res_block(
+            in_chans=input_chans,
+            out_chans=hidden_size
+        )
+        self.res_block_2 = res_block(
+            in_chans=hidden_size,
+            out_chans=hidden_size
+        )
+        self.res_block_3 = res_block(
+            in_chans=hidden_size,
+            out_chans=hidden_size
+        )
+        self.res_block_4 = res_block(
+            in_chans=hidden_size,
+            out_chans=hidden_size
+        )
+        self.res_block_5 = res_block(
+            in_chans=hidden_size,
+            out_chans=output_chans
+        )
+
+    def forward(self, x):
+        print(f'DEBUG :: size :: {x.size()}')
+        x = self.resnet(x)
+        '''
+        print(f'DEBUG :: size :: {x.size()}')
+        x = self.res_block_1(x)
+        #print(f'DEBUG :: size :: {x.size()}')
+        #x = self.res_block_2(x)
+        #print(f'DEBUG :: size :: {x.size()}')
+        #x = self.res_block_3(x)
+        #print(f'DEBUG :: size :: {x.size()}')
+        #x = self.res_block_4(x)
+        print(f'DEBUG :: size :: {x.size()}')
+        x = self.res_block_5(x)
+        print(f'DEBUG :: size :: {x.size()}')
+        '''
         return x

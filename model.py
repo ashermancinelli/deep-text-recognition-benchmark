@@ -17,7 +17,7 @@ limitations under the License.
 import torch.nn as nn
 
 from modules.transformation import TPS_SpatialTransformerNetwork
-from modules.feature_extraction import VGG_FeatureExtractor, RCNN_FeatureExtractor, ResNet_FeatureExtractor
+from modules.feature_extraction import VGG_FeatureExtractor, RCNN_FeatureExtractor, ResNet_FeatureExtractor, Rosetta_FeatureExtractor
 from modules.sequence_modeling import BidirectionalLSTM
 from modules.prediction import Attention
 
@@ -29,6 +29,11 @@ class Model(nn.Module):
         self.opt = opt
         self.stages = {'Trans': opt.Transformation, 'Feat': opt.FeatureExtraction,
                        'Seq': opt.SequenceModeling, 'Pred': opt.Prediction}
+
+        if opt.FeatureExtraction == 'Rosetta':
+            print('Note: Rosetta module necessitates the lack of an explicit '
+                    'sequence modeler and prediction must be CTC, as this is '
+                    'done within the convolutions')
 
         """ Transformation """
         if opt.Transformation == 'TPS':
@@ -44,11 +49,14 @@ class Model(nn.Module):
             self.FeatureExtraction = RCNN_FeatureExtractor(opt.input_channel, opt.output_channel)
         elif opt.FeatureExtraction == 'ResNet':
             self.FeatureExtraction = ResNet_FeatureExtractor(opt.input_channel, opt.output_channel)
+        elif opt.FeatureExtraction == 'Rosetta':
+            self.FeatureExtraction = Rosetta_FeatureExtractor(opt.input_channel, opt.output_channel)
         else:
             raise Exception('No FeatureExtraction module specified')
         self.FeatureExtraction_output = opt.output_channel  # int(imgH/16-1) * 512
         self.AdaptiveAvgPool = nn.AdaptiveAvgPool2d((None, 1))  # Transform final (imgH/16-1) -> 1
 
+        #print(opt); exit()
         """ Sequence modeling"""
         if opt.SequenceModeling == 'BiLSTM':
             self.SequenceModeling = nn.Sequential(
