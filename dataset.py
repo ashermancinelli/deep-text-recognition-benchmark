@@ -123,7 +123,10 @@ class LmdbDataset(Dataset):
             nSamples = int(txn.get('num-samples'.encode()))
             self.nSamples = nSamples
 
-            if self.opt.data_filtering:
+            if self.opt.data_filtering_off:
+                # for fast check with no filtering
+                self.filtered_index_list = [index + 1 for index in range(self.nSamples)]
+            else:
                 # Filtering
                 self.filtered_index_list = []
                 for index in range(self.nSamples):
@@ -136,12 +139,15 @@ class LmdbDataset(Dataset):
                         # {len(label)}, {label} in dataset {self.root}')
                         continue
 
+                    # By default, images containing characters which are not in opt.character are filtered.
+                    # You can add [UNK] token to `opt.character` in utils.py instead of this filtering.
+                    out_of_char = f'[^{self.opt.character}]'
+                    if re.search(out_of_char, label.lower()):
+                        continue
+
                     self.filtered_index_list.append(index)
 
                 self.nSamples = len(self.filtered_index_list)
-            else:
-                # for fast check with no filtering
-                self.filtered_index_list = [index+1 for index in range(self.nSamples)]
 
     def __len__(self):
         return self.nSamples
