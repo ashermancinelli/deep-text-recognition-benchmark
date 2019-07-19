@@ -1,12 +1,17 @@
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-def res_block(in_chans, out_chans, kernel_size=(3, 3),
+def create_residual_block(in_chans, out_chans, kernel_size=(3, 3),
                 strides=((1, 1), (1, 1))):
+    '''
+    Helper function to create residual blocks
+    of connected conv blocks
+    '''
     return nn.Sequential(
             nn.Conv2d(
                 in_channels=in_chans,
-                out_channels=out_chans,
+                out_channels=in_chans,
                 kernel_size=kernel_size,
                 stride=strides[0]
             ),
@@ -264,44 +269,59 @@ class ResNet(nn.Module):
 class Rosetta_FeatureExtractor(nn.Module):
 
     def __init__(self, input_chans, output_chans):
-        hidden_size = 512
         super().__init__()
-        self.resnet = ResNet(input_chans, output_chans, BasicBlock, [1, 2, 5, 3])
-        self.res_block_1 = res_block(
-            in_chans=input_chans,
-            out_chans=hidden_size
+        self.output_chans = output_chans
+        # self.resnet = ResNet(input_chans, output_chans, BasicBlock, [1, 2, 5, 3])
+        self.input_block = nn.Sequential(
+            nn.Conv2d(
+                in_channels=1,
+                out_channels=64,
+                kernel_size=(7, 7),
+                stride=1
+            ),
+            nn.BatchNorm2d(64),
+            nn.ReLU(),
+            nn.MaxPool2d(
+                kernel_size=(4,5),
+                stride=1
+            )
         )
-        self.res_block_2 = res_block(
-            in_chans=hidden_size,
-            out_chans=hidden_size
-        )
-        self.res_block_3 = res_block(
-            in_chans=hidden_size,
-            out_chans=hidden_size
-        )
-        self.res_block_4 = res_block(
-            in_chans=hidden_size,
-            out_chans=hidden_size
-        )
-        self.res_block_5 = res_block(
-            in_chans=hidden_size,
-            out_chans=output_chans
+        self.res_block_1 = create_residual_block(64, 64,
+                                                kernel_size=(4, 4))
+        self.res_block_2 = create_residual_block(64, 128,
+                                                kernel_size=(4, 4))
+        self.res_block_3 = create_residual_block(128, 256,
+                                                kernel_size=(3, 3),
+                                                strides=(1, 1))
+        self.res_block_4 = create_residual_block(256, 512,
+                                                kernel_size=(3, 3),
+                                                strides=(1, 1))
+        self.last_conv = nn.Conv2d(
+            in_channels=512,
+            out_channels=output_chans,
+            kernel_size=(3, 3),
+            stride=(1, 1)
         )
 
     def forward(self, x):
-        print(f'DEBUG :: size :: {x.size()}')
-        x = self.resnet(x)
-        '''
-        print(f'DEBUG :: size :: {x.size()}')
+        print(f'FEAT_EXT\t::\tinput size\t\t::\t\t{x.size()}')
+        x = self.input_block(x)
+        print(f'FEAT_EXT\t::\tafter input block size\t::\t\t{x.size()}')
         x = self.res_block_1(x)
-        #print(f'DEBUG :: size :: {x.size()}')
-        #x = self.res_block_2(x)
-        #print(f'DEBUG :: size :: {x.size()}')
-        #x = self.res_block_3(x)
-        #print(f'DEBUG :: size :: {x.size()}')
-        #x = self.res_block_4(x)
-        print(f'DEBUG :: size :: {x.size()}')
-        x = self.res_block_5(x)
-        print(f'DEBUG :: size :: {x.size()}')
+        print(f'FEAT_EXT\t::\tblock 1 size\t\t::\t\t{x.size()}')
+        x = self.res_block_2(x)
+        print(f'FEAT_EXT\t::\tblock 2 size\t\t::\t\t{x.size()}')
+        x = self.res_block_3(x)
+        print(f'FEAT_EXT\t::\tblock 3 size\t\t::\t\t{x.size()}')
+        x = self.res_block_4(x)
+        print(f'FEAT_EXT\t::\tblock 4 size\t\t::\t\t{x.size()}')
+        x = self.last_conv(x)
+        print(f'FEAT_EXT\t::\tlast conv size\t\t::\t\t{x.size()}')
         '''
+        Height dimension will be squeezed out, so must end with size of 1.
+        Width will end up being the length of the alphabet, so must
+        map to len(abc)
+        '''
+        assert x.size(2) == 1, 'Height must reduce to 1'
+        assert x.size(1) == self.output_chans, f'Width ({x.size(-1)}) must reduce to output chans ({self.output_chans})'
         return x

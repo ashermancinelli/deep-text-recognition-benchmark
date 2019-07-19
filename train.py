@@ -130,8 +130,14 @@ def train(opt):
 
         if 'CTC' in opt.Prediction:
             preds = model(image, text).log_softmax(2)
+            print(f'TRAIN\t\t::\tmodel output\t\t::\t\t{preds.size()}')
             preds_size = torch.IntTensor([preds.size(1)] * batch_size)
+            print(f'TRAIN\t\t::\texpanded preds\t\t::\t\t{preds.size()}')
             preds = preds.permute(1, 0, 2)  # to use CTCLoss format
+            print(f'TRAIN\t\t::\tpermuted preds\t\t::\t\t{preds.size()}')
+            print(f'TRAIN\t\t::\ttext\t\t\t::\t\t{text.size()}')
+            print(f'TRAIN\t\t::\tpreds_size\t\t::\t\t{preds_size.size()}')
+            print(f'TRAIN\t\t::\tlength\t\t\t::\t\t{length.size()}')
             cost = criterion(preds, text, preds_size, length)
 
         else:
